@@ -14,7 +14,7 @@ def main():
     #default values
     maxwidth = 3
     minwidth = 0.001
-    inc = 1
+    inc = 0.1
     radoffset = 0
     axoffset = 0
     target = 2
@@ -26,7 +26,7 @@ def main():
     pL = [] # inductance of the positive coil
     nL = [] # inductance of the negative coil
     targsize = []
-    Materials = ["Air", "Copper", "EFW","316 Stainless Steel","416 Stainless Steel", "Mu Metal", "17-4"]
+    Materials = ["Air", "Copper", "EFW", "316 Stainless Steel","416 Stainless Steel", "Mu Metal", "17-4"]
     
     try:
         femm.opendocument(pth+'\\'+template) #Assuming the template file is placed in the same folder as this file
@@ -118,8 +118,9 @@ def main():
         targetx1 = center-(minwidth/2+inc*(n))
 
         #Clear previous
-        femm.mi_selectrectangle(5.125,targety1-0.05,8.625,targety2+0.05,4)
-        femm.mi_deleteselected()
+        if(n>0):
+            femm.mi_selectrectangle(5.125,targety1-0.05,8.625,targety2+0.05,4)
+            femm.mi_deleteselected()
         
         #Target
         femm.mi_drawrectangle(targetx1,targety1,targetx2,targety2)
@@ -157,8 +158,6 @@ def main():
         nvals = femm.mo_getcircuitproperties('Coil_Neg')
         nL.append(nvals[2]/nvals[0]*2)
 
-        
-
     plt.plot(targsize,np.real(pL))
     plt.ylabel('Inductance, Henries')
     plt.xlabel('Target Width (mm)')
@@ -166,7 +165,7 @@ def main():
     lgd = "FSR: "+ str(round(min(np.absolute((pL))),9)*2) +" to " + str(round(max(np.absolute((pL))),9)*2)
     plt.legend([lgd])
     plt.grid(True)
-    plt.xticks(np.arange(min(targsize),max(targsize)+1,inc))
+    plt.xticks(np.arange(min(targsize),max(targsize),inc),rotation = 90)
     plt.show()
 
     print(pL)
