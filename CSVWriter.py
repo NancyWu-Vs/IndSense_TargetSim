@@ -23,7 +23,7 @@ class CSVWriter:
     def create_file(self, text=None):
         if text is not None:
             self.filename = text
-        self.file = open(self.first_file(), 'w')
+        self.file = open(self.first_file(), 'w', newline='')
         self.csvwriter = csv.writer(self.file)
         #self.csvwriter.writerow(self.COLUMNS)
 
@@ -37,6 +37,7 @@ class CSVWriter:
                 os.makedirs("log")        
             if os.path.exists(output_file):
                 continue
+            self.filename = "{}_{:05}".format(self.filename, counter)
             return output_file
 
     def close(self):

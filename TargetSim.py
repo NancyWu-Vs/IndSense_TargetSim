@@ -2,8 +2,23 @@ import femm
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+from datetime import datetime
 import CSVWriter
 
+def csv_header(csv,template,maxwidth,minwidth,inc,radoffset,axoffset,target,background,backer,targetthickness,Materials):
+    csv.write(["This data was collected on: " + datetime.now().strftime("%Y_%m_%d")])
+    csv.write(["The coil template is: " + template])
+    csv.write(["The coil backer material is: " +Materials[backer]])
+    csv.write(["The target background is:" +Materials[background]])
+    csv.write(["The target parameters are as follows:"])
+    csv.write(["Thickness: " + str(targetthickness)])
+    csv.write(["Material: " + Materials[target]])
+    csv.write(["Sweep Range:" + str(minwidth) +"-"+ str(maxwidth) +", increments of:" + str(inc)])
+    csv.write(["Axial/Vertical offset: "+ str(axoffset)])
+    csv.write(["Radial/Horizontal offset: " + str(radoffset)])
+    csv.write(["The offset is from a basic position where the target starts directly over the midpoint of the coils at a height of 0.1mm.\n "])
+    csv.write(["\n\n"])
+    csv.write(["pL", "nL", "Re(pL+nL)"])
 
 def main():
 
@@ -25,6 +40,7 @@ def main():
     
     pL = [] # inductance of the positive coil
     nL = [] # inductance of the negative coil
+    repLnL = []
     targsize = []
     Materials = ["Air", "Copper", "EFW", "316 Stainless Steel","416 Stainless Steel", "Mu Metal", "17-4"]
     
@@ -107,7 +123,6 @@ def main():
     nmax = int((maxwidth-minwidth)/(inc*2))
     targety1 = targety1base+axoffset
     targety2 = targety1base+targetthickness+axoffset
-    csv = CSVWriter.CSVWriter("IndSense_FEMM_TargetSweep")
 
     femm.mi_addblocklabel(center,4.575)
     femm.mi_selectlabel(center,4.575)
@@ -153,24 +168,34 @@ def main():
         #femm.mo_makeplot(1,1500)#|B|
 
         pvals = femm.mo_getcircuitproperties('Coil_Pos')
-        pL.append(pvals[2]/pvals[0]*2)
+        pL.append(pvals[2]/pvals[0])
         targsize.append(targetx2-targetx1)
         nvals = femm.mo_getcircuitproperties('Coil_Neg')
-        nL.append(nvals[2]/nvals[0]*2)
+        nL.append(nvals[2]/nvals[0])
+        repLnL.append((pvals[2]/pvals[0]+nvals[2]/nvals[0]).real)
+
+    csv = CSVWriter.CSVWriter("IndSense_FEMM_TargetSim")
+    confirm = input("Please input any additional comments : \n")
+    csv.write([confirm])
+    csv_header(csv,template,maxwidth,minwidth,inc,radoffset,axoffset,target,background,backer,targetthickness,Materials)
+    for i in range(0,len(pL)):
+        csv.write([pL[i], nL[i], repLnL[i]])
+    csv.close()
 
     plt.plot(targsize,np.real(pL))
+
+    #plt.figure(figsize=(10,6))
     plt.ylabel('Inductance, Henries')
     plt.xlabel('Target Width (mm)')
     plt.title('Inductance by '+Materials[target]+' Target Width with '+Materials[backer]+' Backer and '+Materials[background]+' Background, \n'+csv.filename)
-    lgd = "FSR: "+ str(round(min(np.absolute((pL))),9)*2) +" to " + str(round(max(np.absolute((pL))),9)*2)
+    lgd = "FSR: "+str(min(repLnL))+"-"+str(max(repLnL))
     plt.legend([lgd])
     plt.grid(True)
     plt.xticks(np.arange(min(targsize),max(targsize),inc),rotation = 90)
+    filename = './log/' + datetime.now().strftime("%Y_%m_%d_") + csv.filename +".png"
+    plt.savefig(filename)
     plt.show()
-
-    print(pL)
-    input()
-
+    
 if __name__ == '__main__':
     main()
     print("Finished!")
