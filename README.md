@@ -1,2 +1,2 @@
 # IndSense_TargetSim
-Please install FEMM for this to work: https://www.femm.info/wiki/pyFEMM/
+Please install python and FEMM for this to work: https://www.femm.info/wiki/pyFEMM/
